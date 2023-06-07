@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <ul>
+            <li><a href="{{ url_for('index') }}">主页</a></li>
+            <li><a href="{{ url_for('paper') }}">论文</a></li>
+            <li><a href="{{ url_for('project') }}">项目</a></li>
+            <li><a href="{{ url_for('course') }}">课程</a></li>
+        </ul>
+    </nav>
+
+    <div class="content">
+    <h2>添加论文</h2>
+    <form action="/add_paper" method="post">
+        <label for="paper_ID">论文序号：</label>
+        <input type="text" id="paper_ID" name="paper_ID">
+        <label for="paper_name">论文名称：</label>
+        <input type="text" id="paper_name" name="paper_name">
+        <label for="paper_source">发表源：</label>
+        <input type="text" id="paper_source" name="paper_source">
+        <label for="paper_date">发表年份：</label>
+        <input type="text" id="paper_date" name="paper_date">
+        <label for="paper_type">论文类别：</label>
+        <select id="paper_type" name="paper_type">
+            <option value="1">full paper</option>
+            <option value="2">short paper</option>
+            <option value="3">poster paper</option>
+            <option value="4">demo paper</option>
+        </select>
+        <label for="paper_level">论文级别：</label>
+        <select id="paper_level" name="paper_level">
+            <option value="1">CCF-A</option>
+            <option value="2">CCF-B</option>
+            <option value="3">CCF-C</option>
+            <option value="4">中文CCF-A</option>
+            <option value="5">中文CCF-B</option>
+            <option value="6">无级别</option>
+        </select>
+        <button type="submit">添加论文</button>
+    </form>
+
+    <h2>删除论文</h2>
+    <form action="/delete_paper" method="post">
+        <label for="paper_ID">论文序号：</label>
+        <input type="text" id="paper_ID" name="paper_ID">
+        <button type="submit">删除论文</button>
+    </form>
+
+    <h2>修改论文</h2>
+    <form action="/update_paper" method="post">
+        <label for="paper_ID">论文序号：</label>
+        <input type="text" id="paper_ID" name="paper_ID">
+        <label for="paper_name">论文名称：</label>
+        <input type="text" id="paper_name" name="paper_name">
+        <label for="paper_source">发表源：</label>
+        <input type="text" id="paper_source" name="paper_source">
+        <label for="paper_date">发表年份：</label>
+        <input type="text" id="paper_date" name="paper_date">
+        <label for="paper_type">论文类别：</label>
+        <select id="paper_type" name="paper_type">
+            <option value="1">full paper</option>
+            <option value="2">short paper</option>
+            <option value="3">poster paper</option>
+            <option value="4">demo paper</option>
+        </select>
+        <label for="paper_level">论文级别：</label>
+        <select id="paper_level" name="paper_level">
+            <option value="1">CCF-A</option>
+            <option value="2">CCF-B</option>
+            <option value="3">CCF-C</option>
+            <option value="4">中文CCF-A</option>
+            <option value="5">中文CCF-B</option>
+            <option value="6">无级别</option>
+        </select>
+        <button type="submit">修改论文</button>
+    </form>
+
+    <h2>查询论文</h2>
+    <form id="query_paper_form">
+        <label for="query_paper_ID">论文序号：</label>
+        <input type="text" id="query_paper_ID" name="paper_ID">
+        <button type="submit">查询论文</button>
+    </form>
+
+    <h2>添加教师和论文的关系</h2>
+    <form action="/add_relation_TPa" method="post">
+        <label for="tid">教师ID：</label>
+        <input type="text" id="tid" name="tid">
+        <label for="pid">论文ID：</label>
+        <input type="text" id="pid" name="pid">
+        <label for="ranking">作者排名：</label>
+        <input type="text" id="ranking" name="ranking">
+        <label for="ca">是否为通讯作者：</label>
+        <input type="checkbox" id="ca" name="ca">
+        <button type="submit">添加关系</button>
+    </form>
+
+    <h2>删除教师和论文的关系</h2>
+    <form action="/delete_relation_TPa" method="post">
+        <label for="tid">教师ID：</label>
+        <input type="text" id="tid" name="tid">
+        <label for="pid">论文ID：</label>
+        <input type="text" id="pid" name="pid">
+        <button type="submit">删除关系</button>
+    </form>
+
+    <h2>修改老师和论文的关系</h2>
+    <form action="/update_relation_TPa" method="post">
+        <label for="tid">教师ID：</label>
+        <input type="text" id="tid" name="tid">
+        <label for="pid">论文ID：</label>
+        <input type="text" id="pid" name="pid">
+        <label for="ranking">作者排名：</label>
+        <input type="text" id="ranking" name="ranking">
+        <label for="ca">是否为通讯作者：</label>
+        <input type="checkbox" id="ca" name="ca">
+        <button type="submit">修改关系</button>
+    </form>
+
+    <h2>查询某个老师的论文</h2>
+    <form id="search_paper_by_tid_form">
+        <label for="tid">教师ID：</label>
+        <input type="text" id="tid" name="tid">
+        <button type="submit">查询论文</button>
+    </form>
+
+    </div>  
+
+    <script src="../static/jquery-3.7.0.min.js"></script>
+    <script>
+    $(document).ready(function(){
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        alert("{{ messages[0] }}");
+        {% endif %}
+        {% endwith %}
+    });
+    </script>
+
+    <script>
+        $('#query_paper_form').on('submit', function(e){
+            e.preventDefault();  // 防止表单的默认提交行为
+            $.ajax({
+                url: '/query_paper',
+                method: 'POST',
+                data: $(this).serialize(),  // 将表单数据序列化
+                success: function(res){
+                    if(res.error){
+                        alert(res.error);
+                    }else{
+                        // 根据res.PaType判断论文类型
+                        var paperType = '';
+                        if(res.PaType == 1){
+                            paperType = 'full paper';
+                        }else if(res.PaType == 2){
+                            paperType = 'short paper';
+                        }else if(res.PaType == 3){
+                            paperType = 'poster paper';
+                        }else if(res.PaType == 4){
+                            paperType = 'demo paper';
+                        }
+                        // 根据res.PaLevel判断论文级别
+                        var paperLevel = '';
+                        if(res.PaLevel == 1){
+                            paperLevel = 'CCF-A';
+                        }else if(res.PaLevel == 2){
+                            paperLevel = 'CCF-B';
+                        }else if(res.PaLevel == 3){
+                            paperLevel = 'CCF-C';
+                        }else if(res.PaLevel == 4){
+                            paperLevel = '中文CCF-A';
+                        }else if(res.PaLevel == 5){
+                            paperLevel = '中文CCF-B';
+                        }else if(res.PaLevel == 6){
+                            paperLevel = '无级别';
+                        }
+                        var paperInfo = '论文序号: ' + res.PaID +
+                                        '\n论文名称: ' + res.PaName +
+                                        '\n发表源: ' + res.PaSource +
+                                        '\n发表年份: ' + res.PaDate +
+                                        '\n类型: ' + paperType +
+                                        '\n级别: ' + paperLevel + '\n';
+                        alert(paperInfo);
+                    }
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $('#search_paper_by_tid_form').on('submit', function(e){
+            e.preventDefault();  // 防止表单的默认提交行为
+            $.ajax({
+                url: '/search_paper_by_tid',
+                method: 'POST',
+                data: $(this).serialize(),
+                success: function(res){
+                    if(res.error){
+                        alert(res.error);
+                    }else{
+                        var paperInfo = '';
+                        for(var i = 0; i < res.length; i++){
+                            // 根据res[i].PaType判断论文类型
+                            var paperType = '';
+                            if(res[i].PaType == 1){
+                                paperType = 'full paper';
+                            }else if(res[i].PaType == 2){
+                                paperType = 'short paper';
+                            }else if(res[i].PaType == 3){
+                                paperType = 'poster paper';
+                            }else if(res[i].PaType == 4){
+                                paperType = 'demo paper';
+                            }
+                            // 根据res[i].PaLevel判断论文级别
+                            var paperLevel = '';
+                            if(res[i].PaLevel == 1){
+                                paperLevel = 'CCF-A';
+                            }else if(res[i].PaLevel == 2){
+                                paperLevel = 'CCF-B';
+                            }else if(res[i].PaLevel == 3){
+                                paperLevel = 'CCF-C';
+                            }else if(res[i].PaLevel == 4){
+                                paperLevel = '中文CCF-A';
+                            }else if(res[i].PaLevel == 5){
+                                paperLevel = '中文CCF-B';
+                            }else if(res[i].PaLevel == 6){
+                                paperLevel = '无级别';
+                            }
+                            // 根据res[i].TPaCA判断是否为通讯作者
+                            var TPaCA = '';
+                            if(res[i].TPaCA == 1){
+                                TPaCA = '是通讯作者';
+                            }else if(res[i].TPaCA == 0){
+                                TPaCA = '不是通讯作者';
+                            }
+                            paperInfo += '论文序号: ' + res[i].PaID +
+                                        '\n论文名称: ' + res[i].PaName +
+                                        '\n发表源: ' + res[i].PaSource +
+                                        '\n发表年份: ' + res[i].PaDate +
+                                        '\n类型: ' + paperType +
+                                        '\n级别: ' + paperLevel + 
+                                        '\n排名: ' + res[i].TPaRanking +
+                                        '\n' + TPaCA +
+                                        '\n\n';
+                        }
+                        alert(paperInfo);
+                    }
+                }
+            });
+        });
+    </script>
+
+
+
+</body>
+</html>

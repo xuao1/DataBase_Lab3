@@ -1,258 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>教师科研登记系统</title>
+    <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-    <h1>教师科研登记系统</h1>
+    <nav class="navbar">
+        <ul>
+            <li><a href="{{ url_for('index') }}">主页</a></li>
+            <li><a href="{{ url_for('paper') }}">论文</a></li>
+            <li><a href="{{ url_for('project') }}">项目</a></li>
+            <li><a href="{{ url_for('course') }}">课程</a></li>
+        </ul>
+    </nav>
+    <div class="header">
+        <img src="../static/head.png" alt="your image" class="header-image">
+        <h1 class="title">教师科研登记系统</h1>
+    </div>
+    <div class="card-container">
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title"><img src="../static/icons-open-book.png" class="card-image"> 论文</h5>
+                <a href="{{ url_for('paper') }}" class="btn btn-primary">查看</a>
+            </div>
+        </div>
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title"><img src="../static/icons-microscope.png" class="card-image"> 项目</h5>
+                <a href="{{ url_for('project') }}" class="btn btn-primary">查看</a>
+            </div>
+        </div>
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title"><img src="../static/icons-classroom.png" class="card-image"> 课程</h5>
+                <a href="{{ url_for('course') }}" class="btn btn-primary">查看</a>
+            </div>
+        </div>
+    </div>
 
-    <h2>添加论文</h2>
-    <form action="/add_paper" method="post">
-        <label for="paper_ID">论文序号：</label>
-        <input type="text" id="paper_ID" name="paper_ID">
-        <label for="paper_name">论文名称：</label>
-        <input type="text" id="paper_name" name="paper_name">
-        <label for="paper_source">发表源：</label>
-        <input type="text" id="paper_source" name="paper_source">
-        <label for="paper_date">发表年份：</label>
-        <input type="text" id="paper_date" name="paper_date">
-        <label for="paper_type">论文类别：</label>
-        <select id="paper_type" name="paper_type">
-            <option value="1">full paper</option>
-            <option value="2">short paper</option>
-            <option value="3">poster paper</option>
-            <option value="4">demo paper</option>
-        </select>
-        <label for="paper_level">论文级别：</label>
-        <select id="paper_level" name="paper_level">
-            <option value="1">CCF-A</option>
-            <option value="2">CCF-B</option>
-            <option value="3">CCF-C</option>
-            <option value="4">中文CCF-A</option>
-            <option value="5">中文CCF-B</option>
-            <option value="6">无级别</option>
-        </select>
-        <button type="submit">添加论文</button>
-    </form>
+    <div class="footer">
+        <p>本项目由 <a href="https://github.com/xuao1" target="_blank">xuao</a> 开发，有问题请联系 <a href="mailto:xuao123@mail.ustc.edu.cn">xuao123@mail.ustc.edu.cn</a></p>
+    </div>
 
-    <h2>删除论文</h2>
-    <form action="/delete_paper" method="post">
-        <label for="paper_ID">论文序号：</label>
-        <input type="text" id="paper_ID" name="paper_ID">
-        <button type="submit">删除论文</button>
-    </form>
-
-    <h2>修改论文</h2>
-    <form action="/update_paper" method="post">
-        <label for="paper_ID">论文序号：</label>
-        <input type="text" id="paper_ID" name="paper_ID">
-        <label for="paper_name">论文名称：</label>
-        <input type="text" id="paper_name" name="paper_name">
-        <label for="paper_source">发表源：</label>
-        <input type="text" id="paper_source" name="paper_source">
-        <label for="paper_date">发表年份：</label>
-        <input type="text" id="paper_date" name="paper_date">
-        <label for="paper_type">论文类别：</label>
-        <select id="paper_type" name="paper_type">
-            <option value="1">full paper</option>
-            <option value="2">short paper</option>
-            <option value="3">poster paper</option>
-            <option value="4">demo paper</option>
-        </select>
-        <label for="paper_level">论文级别：</label>
-        <select id="paper_level" name="paper_level">
-            <option value="1">CCF-A</option>
-            <option value="2">CCF-B</option>
-            <option value="3">CCF-C</option>
-            <option value="4">中文CCF-A</option>
-            <option value="5">中文CCF-B</option>
-            <option value="6">无级别</option>
-        </select>
-        <button type="submit">修改论文</button>
-    </form>
-
-
-    <h2>添加教师和论文的关系</h2>
-    <form action="/add_relation_TPa" method="post">
-        <label for="tid">教师ID：</label>
-        <input type="text" id="tid" name="tid">
-        <label for="pid">论文ID：</label>
-        <input type="text" id="pid" name="pid">
-        <label for="ranking">作者排名：</label>
-        <input type="text" id="ranking" name="ranking">
-        <label for="ca">是否为通讯作者：</label>
-        <input type="checkbox" id="ca" name="ca">
-        <button type="submit">添加关系</button>
-    </form>
-
-    <h2>删除教师和论文的关系</h2>
-    <form action="/delete_relation_TPa" method="post">
-        <label for="tid">教师ID：</label>
-        <input type="text" id="tid" name="tid">
-        <label for="pid">论文ID：</label>
-        <input type="text" id="pid" name="pid">
-        <button type="submit">删除关系</button>
-    </form>
-
-    <h2>修改老师和论文的关系</h2>
-    <form action="/update_relation_TPa" method="post">
-        <label for="tid">教师ID：</label>
-        <input type="text" id="tid" name="tid">
-        <label for="pid">论文ID：</label>
-        <input type="text" id="pid" name="pid">
-        <label for="ranking">作者排名：</label>
-        <input type="text" id="ranking" name="ranking">
-        <label for="ca">是否为通讯作者：</label>
-        <input type="checkbox" id="ca" name="ca">
-        <button type="submit">修改关系</button>
-    </form>
-
-    <h2>添加项目</h2>
-    <form action="/add_project" method="post">
-        <label for="pro_ID">项目号：</label>
-        <input type="text" id="pro_ID" name="pro_ID">
-        <label for="pro_name">项目名称：</label>
-        <input type="text" id="pro_name" name="pro_name">
-        <label for="pro_source">项目来源：</label>
-        <input type="text" id="pro_source" name="pro_source">
-        <label for="pro_type">项目类型：</label>
-        <select id="pro_type" name="pro_type">
-            <option value="1">国家级项目</option>
-            <option value="2">省部级项目</option>
-            <option value="3">市厅级项目</option>
-            <option value="4">企业合作项目</option>
-            <option value="5">其它类型项目</option>
-        </select>
-        <label for="pro_budget">项目经费：</label>
-        <input type="text" id="pro_budget" name="pro_budget">
-        <label for="pro_start">项目开始时间：</label>
-        <input type="text" id="pro_start" name="pro_start">
-        <label for="pro_end">项目结束时间：</label>
-        <input type="text" id="pro_end" name="pro_end">
-        <button type="submit">添加项目</button>
-    </form>
-
-    <h2>删除项目</h2>
-    <form action="/delete_project" method="post">
-        <label for="pro_ID">项目号：</label>
-        <input type="text" id="pro_ID" name="pro_ID">
-        <button type="submit">删除项目</button>
-    </form>
-
-    <h2>修改项目</h2>
-    <form action="/update_project" method="post">
-        <label for="pro_ID">项目号：</label>
-        <input type="text" id="pro_ID" name="pro_ID">
-        <label for="pro_name">项目名称：</label>
-        <input type="text" id="pro_name" name="pro_name">
-        <label for="pro_source">项目来源：</label>
-        <input type="text" id="pro_source" name="pro_source">
-        <label for="pro_type">项目类型：</label>
-        <select id="pro_type" name="pro_type">
-            <option value="1">国家级项目</option>
-            <option value="2">省部级项目</option>
-            <option value="3">市厅级项目</option>
-            <option value="4">企业合作项目</option>
-            <option value="5">其它类型项目</option>
-        </select>
-        <label for="pro_budget">项目经费：</label>
-        <input type="text" id="pro_budget" name="pro_budget">
-        <label for="pro_start">项目开始时间：</label>
-        <input type="text" id="pro_start" name="pro_start">
-        <label for="pro_end">项目结束时间：</label>
-        <input type="text" id="pro_end" name="pro_end">
-        <button type="submit">修改项目</button>
-    </form>
-
-    <h2>添加老师和项目的关系</h2>
-    <form action="/add_relation_TPj" method="post">
-        <label for="tid">教师ID：</label>
-        <input type="text" id="tid" name="tid">
-        <label for="pid">项目ID：</label>
-        <input type="text" id="pid" name="pid">
-        <label for="ranking">排名：</label>
-        <input type="text" id="ranking" name="ranking">
-        <label for="budget">预算：</label>
-        <input type="text" id="budget" name="budget">
-        <button type="submit">添加关系</button>
-    </form>
-
-    <h2>删除老师和项目的关系</h2>
-    <form action="/delete_relation_TPj" method="post">
-        <label for="tid">教师ID：</label>
-        <input type="text" id="tid" name="tid">
-        <label for="pid">项目ID：</label>
-        <input type="text" id="pid" name="pid">
-        <button type="submit">删除关系</button>
-    </form>
-
-    <h2>修改老师和项目的关系</h2>
-    <form action="/update_relation_TPj" method="post">
-        <label for="tid">教师ID：</label>
-        <input type="text" id="tid" name="tid">
-        <label for="pid">项目ID：</label>
-        <input type="text" id="pid" name="pid">
-        <label for="ranking">排名：</label>
-        <input type="text" id="ranking" name="ranking">
-        <label for="budget">预算：</label>
-        <input type="text" id="budget" name="budget">
-        <button type="submit">修改关系</button>
-    </form>
-
-    <h2>添加老师和课程的关系</h2>
-    <form action="/add_relation_TC" method="post">
-        <label for="tid">教师ID：</label>
-        <input type="text" id="tid" name="tid">
-        <label for="cid">课程ID：</label>
-        <input type="text" id="cid" name="cid">
-        <label for="date">年份：</label>
-        <input type="text" id="date" name="date">
-        <label for="term">学期：</label>
-        <select id="term" name="term">
-            <option value="1">春季学期</option>
-            <option value="2">夏季学期</option>
-            <option value="3">秋季学期</option>
-        </select>    
-        <label for="hour">承担学时：</label>
-        <input type="text" id="hour" name="hour">
-        <button type="submit">添加关系</button>
-    </form>
-
-    <h2>删除老师和课程的关系</h2>
-    <form action="/delete_relation_TC" method="post">
-        <label for="tid">教师ID：</label>
-        <input type="text" id="tid" name="tid">
-        <label for="cid">课程ID：</label>
-        <input type="text" id="cid" name="cid">
-        <label for="date">年份：</label>
-        <input type="text" id="date" name="date">
-        <label for="term">学期：</label>
-        <select id="term" name="term">
-            <option value="1">春季学期</option>
-            <option value="2">夏季学期</option>
-            <option value="3">秋季学期</option>
-        </select>
-        <button type="submit">删除关系</button>
-    </form>
-
-    <h2>修改老师和课程的关系</h2>
-    <form action="/update_relation_TC" method="post">
-        <label for="tid">教师ID：</label>
-        <input type="text" id="tid" name="tid">
-        <label for="cid">课程ID：</label>
-        <input type="text" id="cid" name="cid">
-        <label for="date">年份：</label>
-        <input type="text" id="date" name="date">
-        <label for="term">学期：</label>
-        <select id="term" name="term">
-            <option value="1">春季学期</option>
-            <option value="2">夏季学期</option>
-            <option value="3">秋季学期</option>
-        </select>    
-        <label for="hour">承担学时：</label>
-        <input type="text" id="hour" name="hour">
-        <button type="submit">修改关系</button>
-    </form>
-
+    <script src="static/jquery-3.7.0.min.js"></script>
+    <script>
+    $(document).ready(function(){
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        alert("{{ messages[0] }}");
+        {% endif %}
+        {% endwith %}
+    });
+    </script>
 </body>
 </html>
+

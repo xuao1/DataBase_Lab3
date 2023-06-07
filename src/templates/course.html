@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <ul>
+            <li><a href="{{ url_for('index') }}">主页</a></li>
+            <li><a href="{{ url_for('paper') }}">论文</a></li>
+            <li><a href="{{ url_for('project') }}">项目</a></li>
+            <li><a href="{{ url_for('course') }}">课程</a></li>
+        </ul>
+    </nav>
+
+    <div class="content">
+    <h2>添加老师和课程的关系</h2>
+    <form action="/add_relation_TC" method="post">
+        <label for="tid">教师ID：</label>
+        <input type="text" id="tid" name="tid">
+        <label for="cid">课程ID：</label>
+        <input type="text" id="cid" name="cid">
+        <label for="date">年份：</label>
+        <input type="text" id="date" name="date">
+        <label for="term">学期：</label>
+        <select id="term" name="term">
+            <option value="1">春季学期</option>
+            <option value="2">夏季学期</option>
+            <option value="3">秋季学期</option>
+        </select>    
+        <label for="hour">承担学时：</label>
+        <input type="text" id="hour" name="hour">
+        <button type="submit">添加关系</button>
+    </form>
+
+    <h2>删除老师和课程的关系</h2>
+    <form action="/delete_relation_TC" method="post">
+        <label for="tid">教师ID：</label>
+        <input type="text" id="tid" name="tid">
+        <label for="cid">课程ID：</label>
+        <input type="text" id="cid" name="cid">
+        <label for="date">年份：</label>
+        <input type="text" id="date" name="date">
+        <label for="term">学期：</label>
+        <select id="term" name="term">
+            <option value="1">春季学期</option>
+            <option value="2">夏季学期</option>
+            <option value="3">秋季学期</option>
+        </select>
+        <button type="submit">删除关系</button>
+    </form>
+
+    <h2>修改老师和课程的关系</h2>
+    <form action="/update_relation_TC" method="post">
+        <label for="tid">教师ID：</label>
+        <input type="text" id="tid" name="tid">
+        <label for="cid">课程ID：</label>
+        <input type="text" id="cid" name="cid">
+        <label for="date">年份：</label>
+        <input type="text" id="date" name="date">
+        <label for="term">学期：</label>
+        <select id="term" name="term">
+            <option value="1">春季学期</option>
+            <option value="2">夏季学期</option>
+            <option value="3">秋季学期</option>
+        </select>    
+        <label for="hour">承担学时：</label>
+        <input type="text" id="hour" name="hour">
+        <button type="submit">修改关系</button>
+    </form>
+
+    <h2>查询某个老师教授的课程</h2>
+    <form id="search_course_by_tid_form">
+        <label for="tid">教师ID：</label>
+        <input type="text" id="tid" name="tid">
+        <button type="submit">查询课程</button>
+    </form>
+
+    </div>  
+
+    <script src="static/jquery-3.7.0.min.js"></script>
+    <script>
+    $(document).ready(function(){
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        alert("{{ messages[0] }}");
+        {% endif %}
+        {% endwith %}
+    });
+    </script>
+
+    <script>
+        $('#search_course_by_tid_form').on('submit', function(e){
+            e.preventDefault();  // 防止表单的默认提交行为
+            $.ajax({
+                url: '/search_course_by_tid',
+                method: 'POST',
+                data: $(this).serialize(),
+                success: function(res){
+                    if(res.error){
+                        alert(res.error);
+                    }else{
+                        var courseInfo = '';
+                        for(var i = 0; i < res.length; i++){
+                            // 根据res[i].Term判断学期
+                            var term = '';
+                            switch(res[i].TCTerm){
+                                case 1:
+                                    term = '春季学期';
+                                    break;
+                                case 2:
+                                    term = '夏季学期';
+                                    break;
+                                case 3:
+                                    term = '秋季学期';
+                                    break;
+                            }
+                            // 根据res[i].CoType判断课程类型
+                            var courseType = '';
+                            switch(res[i].CType){
+                                case 1:
+                                    courseType = '本科生课程';
+                                    break;
+                                case 2:
+                                    courseType = '研究生课程';
+                                    break;
+                            }
+                            courseInfo += '课程号: ' + res[i].CID +
+                                            '\n课程名称: ' + res[i].CName +
+                                            '\n课程学时: ' + res[i].CHours +
+                                            '\n课程类型: ' + courseType +
+                                            '\n课程年份: ' + res[i].TCDate +
+                                            '\n授课学期: ' + term +
+                                            '\n授课学时: ' + res[i].TCHour +
+                                            '\n\n';
+                        }
+                        alert(courseInfo);
+                    }
+                }
+            });
+        });
+    </script>
+
+
+
+</body>
+</html>
+

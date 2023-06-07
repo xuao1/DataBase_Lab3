@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <ul>
+            <li><a href="{{ url_for('index') }}">主页</a></li>
+            <li><a href="{{ url_for('paper') }}">论文</a></li>
+            <li><a href="{{ url_for('project') }}">项目</a></li>
+            <li><a href="{{ url_for('course') }}">课程</a></li>
+        </ul>
+    </nav>
+
+    <div class="content">
+    <h2>添加项目</h2>
+    <form action="/add_project" method="post">
+        <label for="pro_ID">项目号：</label>
+        <input type="text" id="pro_ID" name="pro_ID">
+        <label for="pro_name">项目名称：</label>
+        <input type="text" id="pro_name" name="pro_name">
+        <label for="pro_source">项目来源：</label>
+        <input type="text" id="pro_source" name="pro_source">
+        <label for="pro_type">项目类型：</label>
+        <select id="pro_type" name="pro_type">
+            <option value="1">国家级项目</option>
+            <option value="2">省部级项目</option>
+            <option value="3">市厅级项目</option>
+            <option value="4">企业合作项目</option>
+            <option value="5">其它类型项目</option>
+        </select>
+        <label for="pro_budget">项目经费：</label>
+        <input type="text" id="pro_budget" name="pro_budget">
+        <label for="pro_start">项目开始时间：</label>
+        <input type="text" id="pro_start" name="pro_start">
+        <label for="pro_end">项目结束时间：</label>
+        <input type="text" id="pro_end" name="pro_end">
+        <button type="submit">添加项目</button>
+    </form>
+
+    <h2>删除项目</h2>
+    <form action="/delete_project" method="post">
+        <label for="pro_ID">项目号：</label>
+        <input type="text" id="pro_ID" name="pro_ID">
+        <button type="submit">删除项目</button>
+    </form>
+
+    <h2>修改项目</h2>
+    <form action="/update_project" method="post">
+        <label for="pro_ID">项目号：</label>
+        <input type="text" id="pro_ID" name="pro_ID">
+        <label for="pro_name">项目名称：</label>
+        <input type="text" id="pro_name" name="pro_name">
+        <label for="pro_source">项目来源：</label>
+        <input type="text" id="pro_source" name="pro_source">
+        <label for="pro_type">项目类型：</label>
+        <select id="pro_type" name="pro_type">
+            <option value="1">国家级项目</option>
+            <option value="2">省部级项目</option>
+            <option value="3">市厅级项目</option>
+            <option value="4">企业合作项目</option>
+            <option value="5">其它类型项目</option>
+        </select>
+        <label for="pro_budget">项目经费：</label>
+        <input type="text" id="pro_budget" name="pro_budget">
+        <label for="pro_start">项目开始时间：</label>
+        <input type="text" id="pro_start" name="pro_start">
+        <label for="pro_end">项目结束时间：</label>
+        <input type="text" id="pro_end" name="pro_end">
+        <button type="submit">修改项目</button>
+    </form>
+
+    <h2>查询项目</h2>
+    <form id="query_project_form">
+        <label for="query_project_ID">项目号：</label>
+        <input type="text" id="query_project_ID" name="pro_ID">
+        <button type="submit">查询项目</button>
+    </form>
+
+    <h2>添加老师和项目的关系</h2>
+    <form action="/add_relation_TPj" method="post">
+        <label for="tid">教师ID：</label>
+        <input type="text" id="tid" name="tid">
+        <label for="pid">项目ID：</label>
+        <input type="text" id="pid" name="pid">
+        <label for="ranking">排名：</label>
+        <input type="text" id="ranking" name="ranking">
+        <label for="budget">预算：</label>
+        <input type="text" id="budget" name="budget">
+        <button type="submit">添加关系</button>
+    </form>
+
+    <h2>删除老师和项目的关系</h2>
+    <form action="/delete_relation_TPj" method="post">
+        <label for="tid">教师ID：</label>
+        <input type="text" id="tid" name="tid">
+        <label for="pid">项目ID：</label>
+        <input type="text" id="pid" name="pid">
+        <button type="submit">删除关系</button>
+    </form>
+
+    <h2>修改老师和项目的关系</h2>
+    <form action="/update_relation_TPj" method="post">
+        <label for="tid">教师ID：</label>
+        <input type="text" id="tid" name="tid">
+        <label for="pid">项目ID：</label>
+        <input type="text" id="pid" name="pid">
+        <label for="ranking">排名：</label>
+        <input type="text" id="ranking" name="ranking">
+        <label for="budget">预算：</label>
+        <input type="text" id="budget" name="budget">
+        <button type="submit">修改关系</button>
+    </form>
+
+    <h2>查询某个老师的项目</h2>
+    <form id="search_project_by_tid_form">
+        <label for="tid">教师ID：</label>
+        <input type="text" id="tid" name="tid">
+        <button type="submit">查询项目</button>
+    </form>
+    
+    </div>  
+
+    <script src="static/jquery-3.7.0.min.js"></script>
+    <script>
+    $(document).ready(function(){
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        alert("{{ messages[0] }}");
+        {% endif %}
+        {% endwith %}
+    });
+    </script>
+
+   <script>
+        $('#query_project_form').on('submit', function(e){
+            e.preventDefault();  // 防止表单的默认提交行为
+            $.ajax({
+                url: '/query_project',
+                method: 'POST',
+                data: $(this).serialize(),  // 将表单数据序列化
+                success: function(res){
+                    if(res.error){
+                        alert(res.error);
+                    }else{
+                        // 根据res.ProType判断项目类型
+                        var projectType = '';
+                        switch(res.ProType){
+                            case 1:
+                                projectType = '国家级项目';
+                                break;
+                            case 2:
+                                projectType = '省部级项目';
+                                break;
+                            case 3:
+                                projectType = '市厅级项目';
+                                break;
+                            case 4:
+                                projectType = '企业合作项目';
+                                break;
+                            case 5:
+                                projectType = '其它类型项目';
+                                break;
+                        }
+                        var projectInfo = '项目号: ' + res.ProID +
+                                        '\n项目名称: ' + res.ProName +
+                                        '\n项目来源: ' + res.ProSource +
+                                        '\n项目类型: ' + projectType +
+                                        '\n项目经费: ' + res.ProBudget +
+                                        '\n项目开始时间: ' + res.ProStart +
+                                        '\n项目结束时间: ' + res.ProEnd + '\n';
+                        alert(projectInfo);
+                    }
+                }
+            });
+        });
+    </script> 
+
+    <script>
+        $('#search_project_by_tid_form').on('submit', function(e){
+            e.preventDefault();  // 防止表单的默认提交行为
+            $.ajax({
+                url: '/search_project_by_tid',
+                method: 'POST',
+                data: $(this).serialize(),
+                success: function(res){
+                    if(res.error){
+                        alert(res.error);
+                    }else{
+                        var projectInfo = '';
+                        for(var i = 0; i < res.length; i++){
+                            // 根据res[i].ProType判断项目类型
+                            var projectType = '';
+                            switch(res[i].ProType){
+                                case 1:
+                                    projectType = '国家级项目';
+                                    break;
+                                case 2:
+                                    projectType = '省部级项目';
+                                    break;
+                                case 3:
+                                    projectType = '市厅级项目';
+                                    break;
+                                case 4:
+                                    projectType = '企业合作项目';
+                                    break;
+                                case 5:
+                                    projectType = '其它类型项目';
+                                    break;
+                            }
+                            projectInfo += '项目号: ' + res[i].ProID +
+                                            '\n项目名称: ' + res[i].ProName +
+                                            '\n项目来源: ' + res[i].ProSource +
+                                            '\n项目类型: ' + projectType +
+                                            '\n项目经费: ' + res[i].ProBudget +
+                                            '\n项目开始时间: ' + res[i].ProStart +
+                                            '\n项目结束时间: ' + res[i].ProEnd + 
+                                            '\n排名: ' + res[i].TProRanking +
+                                            '\n老师预算: ' + res[i].TProBudget +
+                                            '\n\n';
+                        }
+                        alert(projectInfo);
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
