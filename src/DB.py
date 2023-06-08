@@ -64,19 +64,126 @@ class TeacherProject(db.Model):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    projects = Project.query.all()
+    underfunded_projects = []
+    for project in projects:
+        # 查询该项目对应的teacher_project表中的所有老师的经费总数
+        pid = project.ProID
+        existing_budget = TeacherProject.query.filter_by(ProID=pid).with_entities(TeacherProject.TProBudget).all()
+        existing_budget = [budget[0] for budget in existing_budget]
+        existing_budget = sum(existing_budget)
+        if project.ProBudget > existing_budget:
+            underfunded_projects.append(project)
+
+    courses = Course.query.all()
+    # underfunded_courses 记录在某年份某学期的总课时数小于该课程总课时数的课程，以及对应的年份和学期
+    underfunded_courses = []
+    for course in courses:
+        cid = course.CID
+        # 查询该课程对应的teacher_course表中，该课程在哪些年份哪些学期有授课记录，保存在一个元组数组，且去重
+        existing_terms = TeacherCourse.query.filter_by(CID=cid).with_entities(TeacherCourse.TCDate, TeacherCourse.TCTerm).distinct().all()
+        # 对每个年份和学期的组合，查询该课程在该年份学期的总课时数，如果小于该课程的总课时数，则该课程为不足课时课程
+        for term in existing_terms:
+            existing_hours = TeacherCourse.query.filter_by(CID=cid, TCDate=term[0], TCTerm=term[1]).with_entities(TeacherCourse.TCHour).all()
+            existing_hours = [hour[0] for hour in existing_hours]
+            existing_hours = sum(existing_hours)
+            if existing_hours < course.CHours:
+                underfunded_courses.append((course, term[0], term[1]))
+    return render_template('index.html', underfunded_projects=underfunded_projects, underfunded_courses=underfunded_courses)
+
 
 @app.route('/paper')
 def paper():
-    return render_template('paper.html')
+    projects = Project.query.all()
+    underfunded_projects = []
+    for project in projects:
+        # 查询该项目对应的teacher_project表中的所有老师的经费总数
+        pid = project.ProID
+        existing_budget = TeacherProject.query.filter_by(ProID=pid).with_entities(TeacherProject.TProBudget).all()
+        existing_budget = [budget[0] for budget in existing_budget]
+        existing_budget = sum(existing_budget)
+        if project.ProBudget > existing_budget:
+            underfunded_projects.append(project)
+
+    courses = Course.query.all()
+    # underfunded_courses 记录在某年份某学期的总课时数小于该课程总课时数的课程，以及对应的年份和学期
+    underfunded_courses = []
+    for course in courses:
+        cid = course.CID
+        # 查询该课程对应的teacher_course表中，该课程在哪些年份哪些学期有授课记录，保存在一个元组数组，且去重
+        existing_terms = TeacherCourse.query.filter_by(CID=cid).with_entities(TeacherCourse.TCDate,
+                                                                              TeacherCourse.TCTerm).distinct().all()
+        # 对每个年份和学期的组合，查询该课程在该年份学期的总课时数，如果小于该课程的总课时数，则该课程为不足课时课程
+        for term in existing_terms:
+            existing_hours = TeacherCourse.query.filter_by(CID=cid, TCDate=term[0], TCTerm=term[1]).with_entities(
+                TeacherCourse.TCHour).all()
+            existing_hours = [hour[0] for hour in existing_hours]
+            existing_hours = sum(existing_hours)
+            if existing_hours < course.CHours:
+                underfunded_courses.append((course, term[0], term[1]))
+    return render_template('paper.html', underfunded_projects=underfunded_projects, underfunded_courses=underfunded_courses)
 
 @app.route('/project')
 def project():
-    return render_template('project.html')
+    projects = Project.query.all()
+    underfunded_projects = []
+    for project in projects:
+        # 查询该项目对应的teacher_project表中的所有老师的经费总数
+        pid = project.ProID
+        existing_budget = TeacherProject.query.filter_by(ProID=pid).with_entities(TeacherProject.TProBudget).all()
+        existing_budget = [budget[0] for budget in existing_budget]
+        existing_budget = sum(existing_budget)
+        if project.ProBudget > existing_budget:
+            underfunded_projects.append(project)
+
+    courses = Course.query.all()
+    # underfunded_courses 记录在某年份某学期的总课时数小于该课程总课时数的课程，以及对应的年份和学期
+    underfunded_courses = []
+    for course in courses:
+        cid = course.CID
+        # 查询该课程对应的teacher_course表中，该课程在哪些年份哪些学期有授课记录，保存在一个元组数组，且去重
+        existing_terms = TeacherCourse.query.filter_by(CID=cid).with_entities(TeacherCourse.TCDate,
+                                                                              TeacherCourse.TCTerm).distinct().all()
+        # 对每个年份和学期的组合，查询该课程在该年份学期的总课时数，如果小于该课程的总课时数，则该课程为不足课时课程
+        for term in existing_terms:
+            existing_hours = TeacherCourse.query.filter_by(CID=cid, TCDate=term[0], TCTerm=term[1]).with_entities(
+                TeacherCourse.TCHour).all()
+            existing_hours = [hour[0] for hour in existing_hours]
+            existing_hours = sum(existing_hours)
+            if existing_hours < course.CHours:
+                underfunded_courses.append((course, term[0], term[1]))
+    return render_template('project.html', underfunded_projects=underfunded_projects, underfunded_courses=underfunded_courses)
 
 @app.route('/course')
 def course():
-    return render_template('course.html')
+    projects = Project.query.all()
+    underfunded_projects = []
+    for project in projects:
+        # 查询该项目对应的teacher_project表中的所有老师的经费总数
+        pid = project.ProID
+        existing_budget = TeacherProject.query.filter_by(ProID=pid).with_entities(TeacherProject.TProBudget).all()
+        existing_budget = [budget[0] for budget in existing_budget]
+        existing_budget = sum(existing_budget)
+        if project.ProBudget > existing_budget:
+            underfunded_projects.append(project)
+
+    courses = Course.query.all()
+    # underfunded_courses 记录在某年份某学期的总课时数小于该课程总课时数的课程，以及对应的年份和学期
+    underfunded_courses = []
+    for course in courses:
+        cid = course.CID
+        # 查询该课程对应的teacher_course表中，该课程在哪些年份哪些学期有授课记录，保存在一个元组数组，且去重
+        existing_terms = TeacherCourse.query.filter_by(CID=cid).with_entities(TeacherCourse.TCDate,
+                                                                              TeacherCourse.TCTerm).distinct().all()
+        # 对每个年份和学期的组合，查询该课程在该年份学期的总课时数，如果小于该课程的总课时数，则该课程为不足课时课程
+        for term in existing_terms:
+            existing_hours = TeacherCourse.query.filter_by(CID=cid, TCDate=term[0], TCTerm=term[1]).with_entities(
+                TeacherCourse.TCHour).all()
+            existing_hours = [hour[0] for hour in existing_hours]
+            existing_hours = sum(existing_hours)
+            if existing_hours < course.CHours:
+                underfunded_courses.append((course, term[0], term[1]))
+    return render_template('course.html', underfunded_projects=underfunded_projects, underfunded_courses=underfunded_courses)
 
 
 # 添加 paper
@@ -291,6 +398,13 @@ def update_project():
         # 如果项目不存在于数据库中，则返回错误信息
         if not project:
             flash("Error: The project does not exist.")
+            return redirect(url_for('project'))
+        # 查询Teacher_Project表中所有设计该项目的记录，计算出该项目的总经费，如果修改后的预算小于该总经费，则返回错误信息
+        total_budget = 0
+        for teacher_project in TeacherProject.query.filter_by(ProID=pro_ID).all():
+            total_budget += teacher_project.TProBudget
+        if pro_budget < total_budget:
+            flash("Error: The budget of the project is less than the total budget of the teachers in this project.")
             return redirect(url_for('project'))
         # 更新项目记录
         project.ProName = pro_name
@@ -532,6 +646,13 @@ def add_relation_TPj():
         if existing_ranking is not None:
             flash("Error: The project ranking is already taken.")
             return redirect(url_for('project'))
+        # 检查加入该老师的预算后，项目的预算是否超过了项目的总预算
+        existing_budget = TeacherProject.query.filter_by(ProID=pid).with_entities(TeacherProject.TProBudget).all()
+        existing_budget = [budget[0] for budget in existing_budget]
+        existing_budget = sum(existing_budget)
+        if existing_budget + budget > existing_project.ProBudget:
+            flash("Error: The project budget is not enough.")
+            return redirect(url_for('project'))
         # 如果所有检查都通过，创建新的关系并保存到数据库
         new_relation = TeacherProject(
             TID=tid,
@@ -613,6 +734,13 @@ def update_relation_TPj():
         if existing_ranking is not None and existing_ranking.TID != tid:
             flash("Error: The project ranking is already taken.")
             return redirect(url_for('project'))
+        # 检查修改后的预算是否超过了项目的总预算
+        existing_budget = TeacherProject.query.filter_by(ProID=pid).with_entities(TeacherProject.TProBudget).all()
+        existing_budget = [budget[0] for budget in existing_budget]
+        existing_budget = sum(existing_budget) - existing_relation.TProBudget
+        if existing_budget + budget > existing_project.ProBudget:
+            flash("Error: The project budget is not enough.")
+            return redirect(url_for('project'))
         # 如果所有检查都通过，修改关系并保存到数据库
         existing_relation.TProRanking = ranking
         existing_relation.TProBudget = budget
@@ -688,6 +816,13 @@ def add_relation_TC():
         existing_relation = TeacherCourse.query.filter_by(TID=tid, CID=cid, TCDate=date, TCTerm=term).first()
         if existing_relation is not None:
             flash("Error: The teacher has already taught this course in this term.")
+            return redirect(url_for('course'))
+        # 检查加入该老师后，该课程该年份该学期的总学时是否超过了课程的总学时
+        existing_hours = TeacherCourse.query.filter_by(CID=cid, TCDate=date, TCTerm=term).with_entities(TeacherCourse.TCHour).all()
+        existing_hours = [hour[0] for hour in existing_hours]
+        existing_hours = sum(existing_hours) + hour
+        if existing_hours > existing_course.CHours:
+            flash("Error: The total hours of the course in this term will exceed the total hours of the course.")
             return redirect(url_for('course'))
         # 如果所有检查都通过，创建新的关系并保存到数据库
         new_relation = TeacherCourse(
@@ -772,6 +907,13 @@ def update_relation_TC():
         if existing_relation.TCHour == hour:
             flash("Error: Nothing changed.")
             return redirect(url_for('course'))
+        # 检查修改后，该课程该年份该学期的总学时是否超过了课程的总学时
+        existing_hours = TeacherCourse.query.filter_by(CID=cid, TCDate=date, TCTerm=term).with_entities(TeacherCourse.TCHour).all()
+        existing_hours = [hour[0] for hour in existing_hours]
+        existing_hours = sum(existing_hours) - existing_relation.TCHour + hour
+        if existing_hours > existing_course.CHours:
+            flash("Error: The total hours of the course in this term will exceed the total hours of the course.")
+            return redirect(url_for('course'))
         # 如果所有检查都通过，修改关系并保存到数据库
         existing_relation.TCDate = date
         existing_relation.TCTerm = term
@@ -815,7 +957,6 @@ def search_course_by_tid():
         } for course in courses]
 
         return jsonify(course_data)
-
 
 
 if __name__ == "__main__":
