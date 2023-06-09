@@ -62,8 +62,7 @@ class TeacherProject(db.Model):
     TProBudget = db.Column(db.Float)
 
 
-@app.route('/')
-def index():
+def notification():
     projects = Project.query.all()
     underfunded_projects = []
     for project in projects:
@@ -81,78 +80,53 @@ def index():
     for course in courses:
         cid = course.CID
         # 查询该课程对应的teacher_course表中，该课程在哪些年份哪些学期有授课记录，保存在一个元组数组，且去重
-        existing_terms = TeacherCourse.query.filter_by(CID=cid).with_entities(TeacherCourse.TCDate, TeacherCourse.TCTerm).distinct().all()
+        existing_terms = TeacherCourse.query.filter_by(CID=cid).with_entities(TeacherCourse.TCDate,
+                                                                              TeacherCourse.TCTerm).distinct().all()
         # 对每个年份和学期的组合，查询该课程在该年份学期的总课时数，如果小于该课程的总课时数，则该课程为不足课时课程
         for term in existing_terms:
-            existing_hours = TeacherCourse.query.filter_by(CID=cid, TCDate=term[0], TCTerm=term[1]).with_entities(TeacherCourse.TCHour).all()
+            existing_hours = TeacherCourse.query.filter_by(CID=cid, TCDate=term[0], TCTerm=term[1]).with_entities(
+                TeacherCourse.TCHour).all()
             existing_hours = [hour[0] for hour in existing_hours]
             existing_hours = sum(existing_hours)
             if existing_hours < course.CHours:
                 underfunded_courses.append((course, term[0], term[1]))
-    return render_template('index.html', underfunded_projects=underfunded_projects, underfunded_courses=underfunded_courses)
+    # underfunded_papers 记录没有添加作者的论文
+    papers = Paper.query.all()
+    underfunded_papers = []
+    for paper in papers:
+        # 查询该论文对应的teacher_paper表中的记录，如果为空，则没有对应的作者
+        pid = paper.PaID
+        existing_authors = TeacherPaper.query.filter_by(PaID=pid).all()
+        if len(existing_authors) == 0:
+            underfunded_papers.append(paper)
+    return underfunded_projects, underfunded_courses, underfunded_papers
+
+
+@app.route('/')
+def index():
+    underfunded_projects, underfunded_courses, underfunded_papers = notification()
+    return render_template('index.html', underfunded_projects=underfunded_projects, underfunded_courses=underfunded_courses, underfunded_papers=underfunded_papers)
 
 
 @app.route('/paper')
 def paper():
-    projects = Project.query.all()
-    underfunded_projects = []
-    for project in projects:
-        # 查询该项目对应的teacher_project表中的所有老师的经费总数
-        pid = project.ProID
-        existing_budget = TeacherProject.query.filter_by(ProID=pid).with_entities(TeacherProject.TProBudget).all()
-        existing_budget = [budget[0] for budget in existing_budget]
-        existing_budget = sum(existing_budget)
-        if project.ProBudget > existing_budget:
-            underfunded_projects.append(project)
+    underfunded_projects, underfunded_courses, underfunded_papers = notification()
+    return render_template('paper.html', underfunded_projects=underfunded_projects,
+                           underfunded_courses=underfunded_courses, underfunded_papers=underfunded_papers)
 
-    courses = Course.query.all()
-    # underfunded_courses 记录在某年份某学期的总课时数小于该课程总课时数的课程，以及对应的年份和学期
-    underfunded_courses = []
-    for course in courses:
-        cid = course.CID
-        # 查询该课程对应的teacher_course表中，该课程在哪些年份哪些学期有授课记录，保存在一个元组数组，且去重
-        existing_terms = TeacherCourse.query.filter_by(CID=cid).with_entities(TeacherCourse.TCDate,
-                                                                              TeacherCourse.TCTerm).distinct().all()
-        # 对每个年份和学期的组合，查询该课程在该年份学期的总课时数，如果小于该课程的总课时数，则该课程为不足课时课程
-        for term in existing_terms:
-            existing_hours = TeacherCourse.query.filter_by(CID=cid, TCDate=term[0], TCTerm=term[1]).with_entities(
-                TeacherCourse.TCHour).all()
-            existing_hours = [hour[0] for hour in existing_hours]
-            existing_hours = sum(existing_hours)
-            if existing_hours < course.CHours:
-                underfunded_courses.append((course, term[0], term[1]))
-    return render_template('paper.html', underfunded_projects=underfunded_projects, underfunded_courses=underfunded_courses)
 
 @app.route('/project')
 def project():
-    projects = Project.query.all()
-    underfunded_projects = []
-    for project in projects:
-        # 查询该项目对应的teacher_project表中的所有老师的经费总数
-        pid = project.ProID
-        existing_budget = TeacherProject.query.filter_by(ProID=pid).with_entities(TeacherProject.TProBudget).all()
-        existing_budget = [budget[0] for budget in existing_budget]
-        existing_budget = sum(existing_budget)
-        if project.ProBudget > existing_budget:
-            underfunded_projects.append(project)
+    underfunded_projects, underfunded_courses, underfunded_papers = notification()
+    return render_template('project.html', underfunded_projects=underfunded_projects,
+                           underfunded_courses=underfunded_courses, underfunded_papers=underfunded_papers)
 
-    courses = Course.query.all()
-    # underfunded_courses 记录在某年份某学期的总课时数小于该课程总课时数的课程，以及对应的年份和学期
-    underfunded_courses = []
-    for course in courses:
-        cid = course.CID
-        # 查询该课程对应的teacher_course表中，该课程在哪些年份哪些学期有授课记录，保存在一个元组数组，且去重
-        existing_terms = TeacherCourse.query.filter_by(CID=cid).with_entities(TeacherCourse.TCDate,
-                                                                              TeacherCourse.TCTerm).distinct().all()
-        # 对每个年份和学期的组合，查询该课程在该年份学期的总课时数，如果小于该课程的总课时数，则该课程为不足课时课程
-        for term in existing_terms:
-            existing_hours = TeacherCourse.query.filter_by(CID=cid, TCDate=term[0], TCTerm=term[1]).with_entities(
-                TeacherCourse.TCHour).all()
-            existing_hours = [hour[0] for hour in existing_hours]
-            existing_hours = sum(existing_hours)
-            if existing_hours < course.CHours:
-                underfunded_courses.append((course, term[0], term[1]))
-    return render_template('project.html', underfunded_projects=underfunded_projects, underfunded_courses=underfunded_courses)
+
+@app.route('/search')
+def search():
+    underfunded_projects, underfunded_courses, underfunded_papers = notification()
+    return render_template('search.html', underfunded_projects=underfunded_projects,
+                           underfunded_courses=underfunded_courses, underfunded_papers=underfunded_papers)
 
 @app.route('/course')
 def course():
@@ -183,7 +157,17 @@ def course():
             existing_hours = sum(existing_hours)
             if existing_hours < course.CHours:
                 underfunded_courses.append((course, term[0], term[1]))
-    return render_template('course.html', underfunded_projects=underfunded_projects, underfunded_courses=underfunded_courses)
+    # underfunded_papers 记录没有添加作者的论文
+    papers = Paper.query.all()
+    underfunded_papers = []
+    for paper in papers:
+        # 查询该论文对应的teacher_paper表中的记录，如果为空，则没有对应的作者
+        pid = paper.PaID
+        existing_authors = TeacherPaper.query.filter_by(PaID=pid).all()
+        if len(existing_authors) == 0:
+            underfunded_papers.append(paper)
+    return render_template('course.html', underfunded_projects=underfunded_projects,
+                           underfunded_courses=underfunded_courses, underfunded_papers=underfunded_papers)
 
 
 # 添加 paper
@@ -296,13 +280,29 @@ def query_paper():
         paper = Paper.query.get(paper_ID)
         if not paper:
             return jsonify({'error': 'The paper does not exist.'})
+        # 同时通过paper_ID查询Teacher_Paper数据库返回论文所有的作者TID
+        teacher_IDs = TeacherPaper.query.filter_by(PaID=paper_ID).all()
+        teacher_IDs = [teacher_ID.TID for teacher_ID in teacher_IDs]
+        # 通过TID和paper_ID查询Teacher_Paper数据库返回论文所有的作者排名
+        teacher_ranks = [TeacherPaper.query.filter_by(PaID=paper_ID, TID=teacher_ID).first().TPaRanking for teacher_ID in teacher_IDs]
+        # 查询该论文的通讯作者，定义变量 PaCA，通过teacher_ID和paper_ID查询Teacher_Paper数据库，看是否有TPaCA为true的，如果有，PaCA为该teacher_ID，否则为空
+        PaCA = [teacher_ID for teacher_ID in teacher_IDs if TeacherPaper.query.filter_by(PaID=paper_ID, TID=teacher_ID, TPaCA=True).first()]
+        # 通过TID查询Teacher数据库返回论文所有的作者姓名
+        teacher_names = [Teacher.query.filter_by(TID=teacher_ID).first().TName for teacher_ID in teacher_IDs]
+        # 如果teacher_ranks非空，按照teacher_ranks排序teacher_ranks，teacher_IDs，teacher_names
+        if teacher_ranks:
+            teacher_ranks, teacher_IDs, teacher_names = zip(*sorted(zip(teacher_ranks, teacher_IDs, teacher_names)))
         paper_data = {
             'PaID': paper.PaID,
             'PaName': paper.PaName,
             'PaSource': paper.PaSource,
             'PaDate': paper.PaDate,
             'PaType': paper.PaType,
-            'PaLevel': paper.PaLevel
+            'PaLevel': paper.PaLevel,
+            'TIDs': teacher_IDs,
+            'TRanks': teacher_ranks,
+            'TNames': teacher_names,
+            'PaCA': PaCA
         }
         return jsonify(paper_data)
 
@@ -329,6 +329,10 @@ def add_project():
         # 如果已经存在于数据库中，则返回错误信息
         if Project.query.get(pro_ID):
             flash("Error: The project already exists.")
+            return redirect(url_for('project'))
+        # 如果开始年份大于结束年份，则返回错误信息
+        if pro_start > pro_end:
+            flash("Error: The start year cannot be greater than the end year.")
             return redirect(url_for('project'))
         # 创建一个新的 Project 对象
         new_project = Project(
@@ -399,6 +403,10 @@ def update_project():
         if not project:
             flash("Error: The project does not exist.")
             return redirect(url_for('project'))
+        # 如果开始年份大于结束年份，则返回错误信息
+        if pro_start > pro_end:
+            flash("Error: The start year cannot be greater than the end year.")
+            return redirect(url_for('project'))
         # 查询Teacher_Project表中所有设计该项目的记录，计算出该项目的总经费，如果修改后的预算小于该总经费，则返回错误信息
         total_budget = 0
         for teacher_project in TeacherProject.query.filter_by(ProID=pro_ID).all():
@@ -432,6 +440,18 @@ def query_project():
         # 如果项目不存在于数据库中，则返回错误信息
         if not project:
             return jsonify({'error': 'The project does not exist.'})
+        # 根据pro_ID从teacher_project查询所有涉及该项目所有老师的TID
+        teacher_IDs = TeacherProject.query.filter_by(ProID=pro_ID).all()
+        teacher_IDs = [teacher_ID.TID for teacher_ID in teacher_IDs]
+        # 通过TID和pro_ID查询Teacher_Project数据库返回项目所有的教师排名
+        teacher_ranks = [TeacherProject.query.filter_by(ProID=pro_ID, TID=teacher_ID).first().TProRanking for teacher_ID in teacher_IDs]
+        # 通过TID和pro_ID查询Teacher_Project数据库返回项目所有的教师经费
+        teacher_budgets = [TeacherProject.query.filter_by(ProID=pro_ID, TID=teacher_ID).first().TProBudget for teacher_ID in teacher_IDs]
+        # 根据TID查询Teacher数据库返回所有涉及该项目所有老师的姓名
+        teacher_names = [Teacher.query.filter_by(TID=teacher_ID).first().TName for teacher_ID in teacher_IDs]
+        # 如果teacher_ranks非空，按照teacher_ranks排序teacher_ranks，teacher_IDs，teacher_names, teacher_budgets
+        if teacher_ranks:
+            teacher_ranks, teacher_IDs, teacher_names, teacher_budgets = zip(*sorted(zip(teacher_ranks, teacher_IDs, teacher_names, teacher_budgets)))
         # 将查询到的项目记录返回
         project_data = {
             'ProID': project.ProID,
@@ -440,9 +460,59 @@ def query_project():
             'ProType': project.ProType,
             'ProBudget': project.ProBudget,
             'ProStart': project.ProStart,
-            'ProEnd': project.ProEnd
+            'ProEnd': project.ProEnd,
+            'TIDs': teacher_IDs,
+            'TRanks': teacher_ranks,
+            'TNames': teacher_names,
+            'TBudgets': teacher_budgets
         }
         return jsonify(project_data)
+
+
+# 查询课程
+@app.route('/query_course', methods=['POST'])
+def query_course():
+    if request.method == 'POST':
+        course_ID = request.form['CID']
+        # 如果传过来的信息不完整，则返回错误信息
+        if not course_ID:
+            return jsonify({'error': 'Please enter all the fields.'})
+        # 根据 course_ID 从数据库中查询对应的课程记录
+        course = Course.query.get(course_ID)
+        # 如果课程不存在于数据库中，则返回错误信息
+        if not course:
+            return jsonify({'error': 'The course does not exist.'})
+        # 通过course_ID在teacher_course查询该课程的所有开课时间，即年份TCDate和学期TCTerm，是一个二元组的数组
+        course_dates = [(teacher_course.TCDate, teacher_course.TCTerm) for teacher_course in TeacherCourse.query.filter_by(CID=course_ID).all()]
+        # 对course_dates按照年份和学期排序
+        course_dates = sorted(course_dates, key=lambda x: (x[0], x[1]))
+        # 对于每个课程，按照开课时间course_dates查询该课程该时间授课的所有老师的TID
+        # 即现在需要：每门课程对于其任意开课时间，知道教授这个时间这门课的老师及其授课学时的二元组的数组
+        # 例如：course_dates = [(2018, 1), (2018, 2), (2019, 1), (2019, 2)]
+        # 那么teacher_by_course_data = [
+        #     (2018, 1, [(1,1), (2,5), (3,6)]),
+        #     (2018, 2, [(1,2), (2,3), (3,4)]),
+        #     (2019, 1, [(1,3), (2,2), (3,1)]),
+        #     (2019, 2, [(1,4), (2,5), (3,6)])
+        # ]
+        teacher_by_course_data = [
+            (
+                course_date[0], course_date[1],
+                [(teacher_course.TID, teacher_course.TCHour) for teacher_course in
+                 TeacherCourse.query.filter_by(CID=course_ID, TCDate=course_date[0], TCTerm=course_date[1]).all()]
+            )
+            for course_date in course_dates
+        ]
+        # 将查询到的课程记录返回
+        course_data = {
+            'CID': course.CID,
+            'CName': course.CName,
+            'CHours': course.CHours,
+            'CType': course.CType,
+            'TCInfo': teacher_by_course_data
+        }
+        return jsonify(course_data)
+
 
 # 添加老师和论文的关系
 @app.route('/add_relation_TPa', methods=['POST'])
@@ -958,6 +1028,91 @@ def search_course_by_tid():
 
         return jsonify(course_data)
 
+
+# 综合查询操作 query_all
+# 按教师工号和给定年份范围汇总查询该教师的教学科研情况的功能；
+# 例如输入工号“01234”，“2023-2023”可以查询01234 教师在2023 年度的教学科研工作情况。
+@app.route('/query_all', methods=['POST'])
+def query_all():
+    if request.method == 'POST':
+        tid = request.form['TID']
+        year_begin = request.form['YearBegin']
+        year_end = request.form['YearEnd']
+        # 如果传过来的信息不完整，则返回错误信息
+        if not tid or not year_begin or not year_end:
+            return jsonify({'error': 'Please enter all the fields.'})
+        # 如果对应的老师不存在，则返回错误信息
+        existing_teacher = Teacher.query.get(tid)
+        if existing_teacher is None:
+            return jsonify({'error': 'The teacher does not exist.'})
+        year_begin = int(request.form['YearBegin'])
+        year_end = int(request.form['YearEnd'])
+        # 如果开始年份大于结束年份，则返回错误信息
+        if year_begin > year_end:
+            return jsonify({'error': 'The begin year should be less than the end year.'})
+        # 首先查询该老师的信息：ID，姓名，性别，职称
+        teacher_data = {
+            'TID': existing_teacher.TID,
+            'TName': existing_teacher.TName,
+            'TSex': existing_teacher.TSex,
+            'TTitle': existing_teacher.TTitle
+        }
+        # 然后查询该老师在给定年份范围内的所有课程
+        # 首先，在 TeacherCourse 表中查询该老师的所有课程的 course ID, Date, Term, Hour,保存为一个元组列表, 查询时依靠 tid，并且 TCDate 在给定年份范围内
+        course_data = TeacherCourse.query.filter(TeacherCourse.TID == tid, TeacherCourse.TCDate >= year_begin,
+                                                    TeacherCourse.TCDate <= year_end).with_entities(
+                TeacherCourse.CID, TeacherCourse.TCDate, TeacherCourse.TCTerm, TeacherCourse.TCHour).all()
+        # 在上述元组列表中，对每个course ID,添加课程名称，保存为一个字典列表
+        course_data = [{
+            'CID': course[0],
+            'CName': Course.query.get(course[0]).CName,
+            'TCDate': course[1],
+            'TCTerm': course[2],
+            'TCHour': course[3]
+        } for course in course_data]
+        # 查询该老师的发表论文情况，返回一个字典列表
+        # 首先在 teacher_paper 中查询该老师的所有论文的 paper ID, 查询时依靠 tid
+        paper_ids = TeacherPaper.query.filter_by(TID=tid).with_entities(TeacherPaper.PaID).all()
+        paper_ids = [id[0] for id in paper_ids]
+        # 然后在 Paper 表中查询所有论文的信息，要求 paper ID 在上述列表中，并且 PaDate 在给定年份范围内
+        paper_data = Paper.query.filter(Paper.PaID.in_(paper_ids), Paper.PaDate >= year_begin,
+                                            Paper.PaDate <= year_end).all()
+        # 再在 TeacherPaper 表中根据tid和paid查询对应的发表时间，返回所有结果
+        paper_data = [{
+            'PaID': paper.PaID,
+            'PaName': paper.PaName,
+            'PaSource': paper.PaSource,
+            'PaDate': paper.PaDate,
+            'PaType': paper.PaType,
+            'PaLevel': paper.PaLevel,
+            'TPaRanking': TeacherPaper.query.filter_by(TID=tid, PaID=paper.PaID).first().TPaRanking,
+            'TPaCA': TeacherPaper.query.filter_by(TID=tid, PaID=paper.PaID).first().TPaCA
+        } for paper in paper_data]
+        # 查询该老师的项目
+        # 先在 TeacherProject 表中查询该老师的所有项目的 project ID
+        project_ids = TeacherProject.query.filter_by(TID=tid).with_entities(TeacherProject.ProID).all()
+        project_ids = [id[0] for id in project_ids]
+        # 然后在 Project 表中查询所有项目的信息，要求 project ID 在上述列表中，并且 ProStart 在给定年份范围内或者 ProEnd 在给定年份范围内，需要去重
+        project_data = Project.query.filter(Project.ProID.in_(project_ids), Project.ProStart >= year_begin,
+                                                Project.ProStart <= year_end).all()
+        project_data += Project.query.filter(Project.ProID.in_(project_ids), Project.ProEnd >= year_begin,
+                                                 Project.ProEnd <= year_end).all()
+        project_data = list(set(project_data))
+        # 再在 TeacherProject 表中根据tid和prid查询对应的项目级别，返回所有结果
+        project_data = [{
+            'PrID': project.ProID,
+            'PrName': project.ProName,
+            'PrSource': project.ProSource,
+            'PrType': project.ProType,
+            'PrBudget': project.ProBudget,
+            'PrStart': project.ProStart,
+            'PrEnd': project.ProEnd,
+            'TProRanking': TeacherProject.query.filter_by(TID=tid, ProID=project.ProID).first().TProRanking,
+            'TProBudget': TeacherProject.query.filter_by(TID=tid, ProID=project.ProID).first().TProBudget
+        } for project in project_data]
+        # 返回结果
+        # print(teacher_data, course_data, paper_data, project_data)
+        return jsonify({'year_begin': year_begin, 'year_end': year_end, 'teacher_data': teacher_data, 'course_data': course_data, 'paper_data': paper_data, 'project_data': project_data})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

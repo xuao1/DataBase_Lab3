@@ -2,6 +2,7 @@
 <html>
 <head>
     <link rel="stylesheet" href="../static/styles.css">
+    <link rel="icon" href="{{ url_for('static', filename='head.png') }}" type="image/x-icon">
 </head>
 <body>
     <nav class="navbar">
@@ -10,9 +11,10 @@
             <li><a href="{{ url_for('paper') }}">论文</a></li>
             <li><a href="{{ url_for('project') }}">项目</a></li>
             <li><a href="{{ url_for('course') }}">课程</a></li>
+            <li><a href="{{ url_for('search') }}">查询</a></li>
             <li class="notification">
-                <!-- 同时通知underfunded_projects和underfunded_courses -->
-                <a href="#">通知 <span id="notif-count">{{ underfunded_projects|length + underfunded_courses|length }}</span></a>
+                <!-- 同时通知underfunded_projects和underfunded_courses和underfunded_papers -->
+                <a href="">通知 <span id="notif-count">{{ underfunded_projects|length + underfunded_courses|length + underfunded_papers|length }}</span></a>
                 <div class="notif-text">
                     {% for project in underfunded_projects %}
                         <p>项目 {{ project.ProID }}: {{ project.ProName }} 的预算未完全分配.</p>
@@ -26,6 +28,9 @@
                             {% set term = "秋季学期" %}
                         {% endif %}
                         <p>课程 {{ course[0].CID }}: {{ course[0].CName }} 在 {{ course[1] }} 年 {{ term }} 的总课时数小于该课程总课时数.</p>
+                    {% endfor %}
+                    {% for paper in underfunded_papers %}
+                        <p>论文 {{ paper.PaID }}: {{ paper.PaName }} 未添加作者信息.</p>
                     {% endfor %}
                 </div>
             </li>

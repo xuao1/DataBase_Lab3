@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="../static/styles.css">
+    <link rel="icon" href="{{ url_for('static', filename='head.png') }}" type="image/x-icon">
+</head>
+<body>
+    <nav class="navbar">
+        <ul>
+            <li><a href="{{ url_for('index') }}">主页</a></li>
+            <li><a href="{{ url_for('paper') }}">论文</a></li>
+            <li><a href="{{ url_for('project') }}">项目</a></li>
+            <li><a href="{{ url_for('course') }}">课程</a></li>
+            <li><a href="{{ url_for('search') }}">查询</a></li>
+            <li class="notification">
+                <!-- 同时通知underfunded_projects和underfunded_courses和underfunded_papers -->
+                <a href="">通知 <span id="notif-count">{{ underfunded_projects|length + underfunded_courses|length + underfunded_papers|length }}</span></a>
+                <div class="notif-text">
+                    {% for project in underfunded_projects %}
+                        <p>项目 {{ project.ProID }}: {{ project.ProName }} 的预算未完全分配.</p>
+                    {% endfor %}
+                    {% for course in underfunded_courses %}
+                        {% if course[2] == 1 %}
+                            {% set term = "春季学期" %}
+                        {% elif course[2] == 2 %}
+                            {% set term = "夏季学期" %}
+                        {% else %}
+                            {% set term = "秋季学期" %}
+                        {% endif %}
+                        <p>课程 {{ course[0].CID }}: {{ course[0].CName }} 在 {{ course[1] }} 年 {{ term }} 的总课时数小于该课程总课时数.</p>
+                    {% endfor %}
+                    {% for paper in underfunded_papers %}
+                        <p>论文 {{ paper.PaID }}: {{ paper.PaName }} 未添加作者信息.</p>
+                    {% endfor %}
+                </div>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="content">
+    <h2>查询老师的科研情况</h2>
+    <form id="query_all_form">
+        <label for="TID">老师ID：</label>
+        <input type="text" id="TID" name="TID">
+        <label for="YearBegin">开始年份：</label>
+        <input type="text" id="YearBegin" name="YearBegin">
+        <label for="YearEnd">结束年份：</label>
+        <input type="text" id="YearEnd" name="YearEnd">
+        <button type="submit">查询</button>
+    </form>
+
+    <h2>下载老师的科研情况</h2>
+    <form id="query_all_form_2">
+        <label for="TID">老师ID：</label>
+        <input type="text" id="TID" name="TID">
+        <label for="YearBegin">开始年份：</label>
+        <input type="text" id="YearBegin" name="YearBegin">
+        <label for="YearEnd">结束年份：</label>
+        <input type="text" id="YearEnd" name="YearEnd">
+        <button type="submit">下载</button>
+    </form>
+    
+    </div>  
+
+    <script src="../static/jquery-3.7.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.debug.js"></script>
+    <script src="../static/msyh-normal.js"></script>
+    <script>
+    $(document).ready(function(){
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        alert("{{ messages[0] }}");
+        {% endif %}
+        {% endwith %}
+    });
+    </script>
+
+   <script>
+        $('#query_all_form').on('submit', function(e){
+            e.preventDefault();  // 防止表单的默认提交行为
+            $.ajax({
+                url: '/query_all',
+                method: 'POST',
+                data: $(this).serialize(),  // 将表单数据序列化
+                success: function(res){
+                    if(res.error){
+                        alert(res.error);
+                    }else{
+                        var allInfo = '';
+                        var teacher_sex = '';
+                        teacher_sex = res.teacher_data.TSex == 1 ? '男' : '女';
+                        var teacher_title = '';
+                        teacher_title = res.teacher_data.TTitle == 1 ? '博士后' : 
+                                        res.teacher_data.TTitle == 2 ? '助教' : 
+                                        res.teacher_data.TTitle == 3 ? '讲师' : 
+                                        res.teacher_data.TTitle == 4 ? '副教授' : 
+                                        res.teacher_data.TTitle == 5 ? '特任教授' : 
+                                        res.teacher_data.TTitle == 6 ? '教授' : 
+                                        res.teacher_data.TTitle == 7 ? '助理研究员' : 
+                                        res.teacher_data.TTitle == 8 ? '特任副研究员' : 
+                                        res.teacher_data.TTitle == 9 ? '副研究员' : 
+                                        res.teacher_data.TTitle == 10 ? '特任研究员' : 
+                                        res.teacher_data.TTitle == 11 ? '研究员' : '';
+                        allInfo += '教师教学科研工作统计（' + res.year_begin + '-' + res.year_end + '）\n';
+                        allInfo += '\n教师基本信息' + '\n----------------------------------------------------------------\n';
+                        allInfo +=  '工号：' + res.teacher_data.TID + 
+                                    '   姓名：' + res.teacher_data.TName +
+                                    '   性别：' + teacher_sex +
+                                    '   职称：' + teacher_title + '\n';
+                        allInfo += '\n教学情况' + '\n----------------------------------------------------------------\n';
+                        for(var i = 0; i < res.course_data.length; i++){
+                            var term = '';
+                            term = res.course_data[i].TCTerm == 1 ? '春' : 
+                                    res.course_data[i].TCTerm == 2 ? '夏' : 
+                                    res.course_data[i].TCTerm == 3 ? '秋' : '';
+                            allInfo +=  '课程号：' + res.course_data[i].CID + 
+                                        '   课程名：' + res.course_data[i].CName +
+                                        '   主讲课时：' + res.course_data[i].TCHour + 
+                                        '   学期：' + res.course_data[i].TCDate +
+                                        ' ' + term + '\n';
+                        }
+                        if(res.course_data.length == 0)
+                            allInfo += '无\n';
+                        allInfo += '\n发表论文情况' + '\n----------------------------------------------------------------\n';
+                        for(var i = 0; i < res.paper_data.length; i++){
+                            var paper_type = '';
+                            paper_type = res.paper_data[i].PaType == 1 ? 'full paper' : 
+                                        res.paper_data[i].PaType == 2 ? 'short paper' : 
+                                        res.paper_data[i].PaType == 3 ? 'poster paper' : 
+                                        res.paper_data[i].PaType == 4 ? 'demo paper' : '';
+                            var paper_level = '';
+                            paper_level = res.paper_data[i].PaLevel == 1 ? 'CCF-A' : 
+                                        res.paper_data[i].PaLevel == 2 ? 'CCF-B' : 
+                                        res.paper_data[i].PaLevel == 3 ? 'CCF-C' : 
+                                        res.paper_data[i].PaLevel == 4 ? '中文CCF-A' : 
+                                        res.paper_data[i].PaLevel == 5 ? '中文CCF-B' : '无级别';
+                            var teacher_ca = '';
+                            teacher_ca = res.paper_data[i].TPaCA == 1 ? ', 是通讯作者' : '';
+                            allInfo +=  (i+1) + '. ' +  
+                                        // '' + res.paper_data[i].PaID +
+                                        '' + res.paper_data[i].PaName +
+                                        ', ' + res.paper_data[i].PaSource + 
+                                        ', ' + res.paper_data[i].PaDate +
+                                        // ', ' + paper_type +
+                                        ', ' + paper_level +
+                                        ', 排名第' + res.paper_data[i].TPaRanking +
+                                        teacher_ca + '\n';
+                        }
+                        if(res.paper_data.length == 0)
+                            allInfo += '无\n';
+                        allInfo += '\n承担项目情况' + '\n----------------------------------------------------------------\n';
+                        for(var i = 0; i < res.project_data.length; i++){
+                            var project_type = '';
+                            project_type = res.project_data[i].ProType == 1 ? '国家级项目' : 
+                                        res.project_data[i].ProType == 2 ? '省部级项目' : 
+                                        res.project_data[i].ProType == 3 ? '市厅级项目' : 
+                                        res.project_data[i].ProType == 4 ? '企业合作项目' : 
+                                        res.project_data[i].ProType == 5 ? '其他项目类型' : '';
+                            allInfo +=  (i+1) + '. ' +  
+                                        // '' + res.project_data[i].PrID +
+                                        '' + res.project_data[i].PrName +
+                                        ', ' + res.project_data[i].PrSource + 
+                                        ', ' + project_type +
+                                        ', ' + res.project_data[i].PrStart +
+                                        '-' + res.project_data[i].PrEnd +
+                                        ', 总经费：' + res.project_data[i].PrBudget +
+                                        // ', 排名第' + res.project_data[i].TProRanking +
+                                        ', 承担经费：' + res.project_data[i].TProBudget + '\n';
+                        }
+                        if(res.project_data.length == 0)
+                            allInfo += '无\n';
+                        alert(allInfo);
+                    }
+                }
+            });
+        });
+    </script> 
+
+<script>
+    $('#query_all_form_2').on('submit', function(e){
+        e.preventDefault();  // 防止表单的默认提交行为
+        $.ajax({
+            url: '/query_all',
+            method: 'POST',
+            data: $(this).serialize(),  // 将表单数据序列化
+            success: function(res){
+                if(res.error){
+                    alert(res.error);
+                }else{
+                    var allInfo = '';
+                    var teacher_sex = '';
+                    teacher_sex = res.teacher_data.TSex == 1 ? '男' : '女';
+                    var teacher_title = '';
+                    teacher_title = res.teacher_data.TTitle == 1 ? '博士后' : 
+                                    res.teacher_data.TTitle == 2 ? '助教' : 
+                                    res.teacher_data.TTitle == 3 ? '讲师' : 
+                                    res.teacher_data.TTitle == 4 ? '副教授' : 
+                                    res.teacher_data.TTitle == 5 ? '特任教授' : 
+                                    res.teacher_data.TTitle == 6 ? '教授' : 
+                                    res.teacher_data.TTitle == 7 ? '助理研究员' : 
+                                    res.teacher_data.TTitle == 8 ? '特任副研究员' : 
+                                    res.teacher_data.TTitle == 9 ? '副研究员' : 
+                                    res.teacher_data.TTitle == 10 ? '特任研究员' : 
+                                    res.teacher_data.TTitle == 11 ? '研究员' : '';
+                    allInfo += '教师教学科研工作统计（' + res.year_begin + '-' + res.year_end + '）\n';
+                    allInfo += '\n教师基本信息' + '\n----------------------------------------------------------------\n';
+                    allInfo +=  '工号：' + res.teacher_data.TID + 
+                                '   姓名：' + res.teacher_data.TName +
+                                '   性别：' + teacher_sex +
+                                '   职称：' + teacher_title + '\n';
+                    allInfo += '\n教学情况' + '\n----------------------------------------------------------------\n';
+                    for(var i = 0; i < res.course_data.length; i++){
+                        var term = '';
+                        term = res.course_data[i].TCTerm == 1 ? '春' : 
+                                res.course_data[i].TCTerm == 2 ? '夏' : 
+                                res.course_data[i].TCTerm == 3 ? '秋' : '';
+                        allInfo +=  '课程号：' + res.course_data[i].CID + 
+                                    '   课程名：' + res.course_data[i].CName +
+                                    '   主讲课时：' + res.course_data[i].TCHour + 
+                                    '   学期：' + res.course_data[i].TCDate +
+                                    ' ' + term + '\n';
+                    }
+                    if(res.course_data.length == 0)
+                        allInfo += '无\n';
+                    allInfo += '\n发表论文情况' + '\n----------------------------------------------------------------\n';
+                    for(var i = 0; i < res.paper_data.length; i++){
+                        var paper_type = '';
+                        paper_type = res.paper_data[i].PaType == 1 ? 'full paper' : 
+                                    res.paper_data[i].PaType == 2 ? 'short paper' : 
+                                    res.paper_data[i].PaType == 3 ? 'poster paper' : 
+                                    res.paper_data[i].PaType == 4 ? 'demo paper' : '';
+                        var paper_level = '';
+                        paper_level = res.paper_data[i].PaLevel == 1 ? 'CCF-A' : 
+                                    res.paper_data[i].PaLevel == 2 ? 'CCF-B' : 
+                                    res.paper_data[i].PaLevel == 3 ? 'CCF-C' : 
+                                    res.paper_data[i].PaLevel == 4 ? '中文CCF-A' : 
+                                    res.paper_data[i].PaLevel == 5 ? '中文CCF-B' : '无级别';
+                        var teacher_ca = '';
+                        teacher_ca = res.paper_data[i].TPaCA == 1 ? ', 是通讯作者' : '';
+                        allInfo +=  (i+1) + '. ' +  
+                                    // '' + res.paper_data[i].PaID +
+                                    '' + res.paper_data[i].PaName +
+                                    ', ' + res.paper_data[i].PaSource + 
+                                    ', ' + res.paper_data[i].PaDate +
+                                    // ', ' + paper_type +
+                                    ', ' + paper_level +
+                                    ', 排名第' + res.paper_data[i].TPaRanking +
+                                    teacher_ca + '\n';
+                    }
+                    if(res.paper_data.length == 0)
+                        allInfo += '无\n';
+                    allInfo += '\n承担项目情况' + '\n----------------------------------------------------------------\n';
+                    for(var i = 0; i < res.project_data.length; i++){
+                        var project_type = '';
+                        project_type = res.project_data[i].ProType == 1 ? '国家级项目' : 
+                                    res.project_data[i].ProType == 2 ? '省部级项目' : 
+                                    res.project_data[i].ProType == 3 ? '市厅级项目' : 
+                                    res.project_data[i].ProType == 4 ? '企业合作项目' : 
+                                    res.project_data[i].ProType == 5 ? '其他项目类型' : '';
+                        allInfo +=  (i+1) + '. ' +  
+                                    // '' + res.project_data[i].PrID +
+                                    '' + res.project_data[i].PrName +
+                                    ', ' + res.project_data[i].PrSource + 
+                                    ', ' + project_type +
+                                    ', ' + res.project_data[i].PrStart +
+                                    '-' + res.project_data[i].PrEnd +
+                                    ', 总经费：' + res.project_data[i].PrBudget +
+                                    // ', 排名第' + res.project_data[i].TProRanking +
+                                    ', 承担经费：' + res.project_data[i].TProBudget + '\n';
+                    }
+                    if(res.project_data.length == 0)
+                        allInfo += '无\n';
+
+                    // 生成PDF
+                    var doc = new jsPDF();
+
+                    doc.addFileToVFS('msyh-normal.ttf', font);
+                    doc.addFont('msyh-normal.ttf', 'msyh', 'normal');
+                    doc.setFont('msyh', 'normal');
+
+                    var lines = allInfo.split('\n');
+                    for (var i = 0; i < lines.length; i++) {
+                        doc.text(lines[i], 10, 10 + (i * 10)); // 修改10, 10 + (i * 10)改变文本的位置
+                    }
+
+                    // 生成一个可供下载的链接
+                    var element = document.createElement('a');
+                    element.href = doc.output('bloburi');
+                    element.download = 'result.pdf';
+                    element.click();
+                }
+            }
+        });
+    });
+</script> 
+
+</body>
+</html>

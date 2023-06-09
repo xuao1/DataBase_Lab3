@@ -2,6 +2,7 @@
 <html>
 <head>
     <link rel="stylesheet" href="../static/styles.css">
+    <link rel="icon" href="{{ url_for('static', filename='head.png') }}" type="image/x-icon">
 </head>
 <body>
     <nav class="navbar">
@@ -10,9 +11,10 @@
             <li><a href="{{ url_for('paper') }}">论文</a></li>
             <li><a href="{{ url_for('project') }}">项目</a></li>
             <li><a href="{{ url_for('course') }}">课程</a></li>
+            <li><a href="{{ url_for('search') }}">查询</a></li>
             <li class="notification">
-                <!-- 同时通知underfunded_projects和underfunded_courses -->
-                <a href="#">通知 <span id="notif-count">{{ underfunded_projects|length + underfunded_courses|length }}</span></a>
+                <!-- 同时通知underfunded_projects和underfunded_courses和underfunded_papers -->
+                <a href="">通知 <span id="notif-count">{{ underfunded_projects|length + underfunded_courses|length + underfunded_papers|length }}</span></a>
                 <div class="notif-text">
                     {% for project in underfunded_projects %}
                         <p>项目 {{ project.ProID }}: {{ project.ProName }} 的预算未完全分配.</p>
@@ -27,12 +29,24 @@
                         {% endif %}
                         <p>课程 {{ course[0].CID }}: {{ course[0].CName }} 在 {{ course[1] }} 年 {{ term }} 的总课时数小于该课程总课时数.</p>
                     {% endfor %}
+                    {% for paper in underfunded_papers %}
+                        <p>论文 {{ paper.PaID }}: {{ paper.PaName }} 未添加作者信息.</p>
+                    {% endfor %}
                 </div>
             </li>
         </ul>
     </nav>
 
     <div class="content">
+
+    <h2>查询课程</h2>
+    <form id="query_course_form">
+        <label for="CID">课程号：</label>
+        <input type="text" id="CID" name="CID">
+        <button type="submit">查询课程</button>
+    </form>
+    
+    
     <h2>添加老师和课程的关系</h2>
     <form action="/add_relation_TC" method="post">
         <label for="tid">教师ID：</label>
@@ -106,6 +120,61 @@
         {% endif %}
         {% endwith %}
     });
+    </script>
+
+    <script>
+        $('#query_course_form').on('submit', function(e){
+            e.preventDefault();  // 防止表单的默认提交行为
+            $.ajax({
+                url: '/query_course',
+                method: 'POST',
+                data: $(this).serialize(),  // 将表单数据序列化
+                success: function(res){
+                    if(res.error){
+                        alert(res.error);
+                    }else{
+                        var courseInfo = '';
+                        var courseType = '';
+                            switch(res.CType){
+                                case 1:
+                                    courseType = '本科生课程';
+                                    break;
+                                case 2:
+                                    courseType = '研究生课程';
+                                    break;
+                            }
+                        courseInfo += '课程号: ' + res.CID +
+                                            '\n名称: ' + res.CName +
+                                            '\n学时: ' + res.CHours +
+                                            '\n类型: ' + courseType;
+                        for(var i = 0; i < res.TCInfo.length; i++){
+                            // 根据res[i].Term判断学期
+                            var term = '';
+                            switch(res.TCInfo[i][1]){
+                                case 1:
+                                    term = '春季学期';
+                                    break;
+                                case 2:
+                                    term = '夏季学期';
+                                    break;
+                                case 3:
+                                    term = '秋季学期';
+                                    break;
+                            }
+                            // 根据res[i].CoType判断课程类型
+                            
+                            courseInfo += '\n年份: ' + res.TCInfo[i][0] +
+                                          '    学期: ' + term + ':';
+                            for(var j = 0; j < res.TCInfo[i][2].length; j++){
+                                courseInfo += '\n教师ID: ' + res.TCInfo[i][2][j][0] +
+                                              '    授课学时: ' + res.TCInfo[i][2][j][1];
+                            }
+                        }
+                        alert(courseInfo);
+                    }
+                }
+            });
+        });
     </script>
 
     <script>
